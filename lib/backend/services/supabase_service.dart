@@ -59,8 +59,7 @@ class SupabaseService {
 
   static User? get currentUser => client.auth.currentUser;
 
-  // ---------------- Profiles / role ----------------
-
+// ---------------- User profiles and roles ----------------
   static Future<void> setRole(String role) async {
   final user = currentUser!;
 
