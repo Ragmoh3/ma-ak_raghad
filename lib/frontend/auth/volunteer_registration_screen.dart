@@ -68,8 +68,11 @@ class _VolunteerRegistrationScreenState
         password: _passwordController.text,
       );
 
-      // 2) Record the chosen role.
-      await SupabaseService.setRole('volunteer');
+      // 2) Record the chosen role and full name.
+await SupabaseService.setRole(
+  'volunteer',
+  fullName: _nameController.text.trim(),
+);
 
       String? documentUrl;
 

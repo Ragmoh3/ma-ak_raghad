@@ -60,10 +60,11 @@ class SupabaseService {
   static User? get currentUser => client.auth.currentUser;
 
 // ---------------- User profiles and roles ----------------
-  static Future<void> setRole(String role) async {
+  static Future<void> setRole(
+  String role, {
+  required String fullName,
+}) async {
   final user = currentUser!;
-
-  final fullName = user.userMetadata?['full_name'] as String?;
 
   await client.from('profiles').upsert({
     'id': user.id,
@@ -71,6 +72,7 @@ class SupabaseService {
     'full_name': fullName,
   });
 }
+
 
   /// Reads back the current user's role ('help_seeker' or 'volunteer'),
   /// or null if no profile row / role has been set yet.

@@ -31,6 +31,7 @@ class _HelpSeekerRegistrationScreenState
   final _passwordController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _otherConditionController = TextEditingController();
+
   String? _condition;
   String? _language;
   bool _obscurePassword = true;
@@ -50,19 +51,24 @@ class _HelpSeekerRegistrationScreenState
 
   Future<void> _createAccount() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _loading = true);
+
     try {
-      // 1) Create the auth account itself (name/email/password) — this
-      //    screen doubles as the sign-up step for the Help Seeker path.
+      // 1) Create the authentication account.
       await SupabaseService.signUp(
         fullName: _nameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-      // 2) Record the chosen role.
-      await SupabaseService.setRole('help_seeker');
-      // 3) Save the Help Seeker specific details. If they chose "Other",
-      //    send the condition they typed instead of the literal word.
+
+      // 2) Save the user's role and full name in the profiles table.
+      await SupabaseService.setRole(
+        'help_seeker',
+        fullName: _nameController.text.trim(),
+      );
+
+      // 3) Save the Help Seeker specific information.
       await SupabaseService.submitHelpSeekerRegistration(
         chronicCondition: _isOtherCondition
             ? _otherConditionController.text.trim()
@@ -72,18 +78,25 @@ class _HelpSeekerRegistrationScreenState
             ? null
             : _descriptionController.text.trim(),
       );
+
       if (!mounted) return;
+
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const PatientShell()),
         (route) => false,
       );
     } catch (e) {
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('حدث خطأ: ${e.toString()}')),
+        SnackBar(
+          content: Text('حدث خطأ: ${e.toString()}'),
+        ),
       );
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -106,6 +119,7 @@ class _HelpSeekerRegistrationScreenState
               children: [
                 const MaakLogo(iconSize: 32),
                 const SizedBox(height: 20),
+
                 const Text(
                   'Help Seeker Registration',
                   textAlign: TextAlign.center,
@@ -115,14 +129,21 @@ class _HelpSeekerRegistrationScreenState
                     color: AppColors.textDark,
                   ),
                 ),
+
                 const SizedBox(height: 6),
+
                 const Text(
                   'Tell us a little about yourself',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textMuted),
+                  style: TextStyle(
+                    color: AppColors.textMuted,
+                  ),
                 ),
+
                 const SizedBox(height: 24),
+
                 const _FieldLabel('Full name'),
+
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
@@ -132,8 +153,11 @@ class _HelpSeekerRegistrationScreenState
                   validator: (v) =>
                       (v == null || v.trim().isEmpty) ? 'Required' : null,
                 ),
+
                 const SizedBox(height: 16),
+
                 const _FieldLabel('Email address'),
+
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -141,12 +165,16 @@ class _HelpSeekerRegistrationScreenState
                     hintText: 'Email address',
                     prefixIcon: Icon(Icons.mail_outline),
                   ),
-                  validator: (v) => (v == null || !v.contains('@'))
-                      ? 'Enter a valid email'
-                      : null,
+                  validator: (v) =>
+                      (v == null || !v.contains('@'))
+                          ? 'Enter a valid email'
+                          : null,
                 ),
+
                 const SizedBox(height: 16),
+
                 const _FieldLabel('Password'),
+
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
@@ -154,56 +182,90 @@ class _HelpSeekerRegistrationScreenState
                     hintText: 'Password',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                      onPressed: () {
+                        setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        );
+                      },
                     ),
                   ),
-                  validator: (v) => (v == null || v.length < 6)
-                      ? 'At least 6 characters'
-                      : null,
+                  validator: (v) =>
+                      (v == null || v.length < 6)
+                          ? 'At least 6 characters'
+                          : null,
                 ),
+
                 const SizedBox(height: 20),
+
                 const _FieldLabel('Chronic condition'),
+
                 DropdownButtonFormField<String>(
                   initialValue: _condition,
-                  decoration:
-                      const InputDecoration(hintText: 'Select your condition'),
+                  decoration: const InputDecoration(
+                    hintText: 'Select your condition',
+                  ),
                   items: kChronicConditions
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                      .map(
+                        (c) => DropdownMenuItem(
+                          value: c,
+                          child: Text(c),
+                        ),
+                      )
                       .toList(),
-                  onChanged: (v) => setState(() => _condition = v),
+                  onChanged: (v) {
+                    setState(() => _condition = v);
+                  },
                   validator: (v) => v == null ? 'Required' : null,
                 ),
+
                 if (_isOtherCondition) ...[
                   const SizedBox(height: 12),
+
                   TextFormField(
                     controller: _otherConditionController,
                     decoration: const InputDecoration(
                       hintText: 'Please specify your condition',
                     ),
                     validator: (v) =>
-                        (_isOtherCondition && (v == null || v.trim().isEmpty))
+                        (_isOtherCondition &&
+                                (v == null || v.trim().isEmpty))
                             ? 'Please specify your condition'
                             : null,
                   ),
                 ],
+
                 const SizedBox(height: 16),
+
                 const _FieldLabel('Preferred language'),
+
                 DropdownButtonFormField<String>(
                   initialValue: _language,
-                  decoration:
-                      const InputDecoration(hintText: 'Select language'),
+                  decoration: const InputDecoration(
+                    hintText: 'Select language',
+                  ),
                   items: kLanguages
-                      .map((l) => DropdownMenuItem(value: l, child: Text(l)))
+                      .map(
+                        (l) => DropdownMenuItem(
+                          value: l,
+                          child: Text(l),
+                        ),
+                      )
                       .toList(),
-                  onChanged: (v) => setState(() => _language = v),
+                  onChanged: (v) {
+                    setState(() => _language = v);
+                  },
                   validator: (v) => v == null ? 'Required' : null,
                 ),
+
                 const SizedBox(height: 16),
+
                 const _FieldLabel('Short description (optional)'),
+
                 TextFormField(
                   controller: _descriptionController,
                   maxLength: 300,
@@ -213,7 +275,9 @@ class _HelpSeekerRegistrationScreenState
                         "Tell us a bit about your experience or what kind of support you're looking for...",
                   ),
                 ),
+
                 const SizedBox(height: 8),
+
                 ElevatedButton(
                   onPressed: _loading ? null : _createAccount,
                   child: _loading
@@ -221,10 +285,13 @@ class _HelpSeekerRegistrationScreenState
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2),
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Text('Create account'),
                 ),
+
                 const SizedBox(height: 24),
               ],
             ),
@@ -237,6 +304,7 @@ class _HelpSeekerRegistrationScreenState
 
 class _FieldLabel extends StatelessWidget {
   final String text;
+
   const _FieldLabel(this.text);
 
   @override
