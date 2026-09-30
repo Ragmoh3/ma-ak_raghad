@@ -320,48 +320,56 @@ class SupabaseService {
         .update(updatedData)
         .eq('user_id', userId);
   }
+    // ---------------- Admin ----------------
+    // These methods are used by the Admin to review and decide
+    // on Volunteer applications.
 
-  // ---------------- Admin ----------------
-  // These three are only used by the admin screens (role == 'admin') to
-  // review and decide on volunteer applications.
+    /// Returns every Volunteer application, newest first,
+    /// together with the Volunteer's name from the profiles table.
+    static Future<List<Map<String, dynamic>>>
+        getVolunteerApplications() async {
+      final response = await client
+          .from('volunteer_profiles')
+          .select('''
+            *,
+            profiles!volunteer_profiles_user_id_fkey1 (
+                full_name
+            )
+          ''')
+          .order(
+            'created_at',
+            ascending: false,
+          );
 
-  /// Returns every volunteer application, newest first.
-  static Future<List<Map<String, dynamic>>>
-      getVolunteerApplications() async {
-    final response = await client
-        .from('volunteer_profiles')
-        .select()
-        .order(
-          'created_at',
-          ascending: false,
-        );
+      return List<Map<String, dynamic>>.from(response);
+    }
 
-    return List<Map<String, dynamic>>.from(response);
-  }
+    /// Marks one Volunteer's application as approved.
+    /// Any previous rejection reason is removed.
+    static Future<void> approveVolunteerApplication(
+      String userId,
+    ) async {
+      await client
+          .from('volunteer_profiles')
+          .update({
+            'status': 'approved',
+            'rejection_reason': null,
+          })
+          .eq('user_id', userId);
+    }
 
-  /// Marks one volunteer's application as approved.
-  static Future<void> approveVolunteerApplication(
-    String userId,
-  ) async {
-    await client
-        .from('volunteer_profiles')
-        .update({
-          'status': 'approved',
-        })
-        .eq('user_id', userId);
-  }
-
-  /// Marks one volunteer's application as rejected and stores why.
-  static Future<void> rejectVolunteerApplication({
-    required String userId,
-    required String reason,
-  }) async {
-    await client
-        .from('volunteer_profiles')
-        .update({
-          'status': 'rejected',
-          'rejection_reason': reason,
-        })
-        .eq('user_id', userId);
-  }
+    /// Marks one Volunteer's application as rejected
+    /// and stores the Admin's reason.
+    static Future<void> rejectVolunteerApplication({
+      required String userId,
+      required String reason,
+    }) async {
+      await client
+          .from('volunteer_profiles')
+          .update({
+            'status': 'rejected',
+            'rejection_reason': reason,
+          })
+          .eq('user_id', userId);
+    }
 }
