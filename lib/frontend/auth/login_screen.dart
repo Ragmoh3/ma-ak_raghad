@@ -88,8 +88,9 @@ class _LoginScreenState extends State<LoginScreen> {
         // Admin accounts are routed to the Admin dashboard.
         destination = const AdminDashboardScreen();
       } else {
-        // If no role has been saved, allow the user to choose a role.
-        destination = const ChooseRoleScreen();
+        // No valid role was found for this account, send the user back to
+        // the login screen to sign in again.
+        destination = const LoginScreen();
       }
 
       // Replace the login screen with the correct destination.

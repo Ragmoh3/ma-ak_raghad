@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:maak_app/frontend/auth/login_screen.dart';
 import '../../backend/services/supabase_service.dart';
 import 'choose_role_screen.dart';
 import '../patient/patient_shell.dart';
@@ -68,9 +69,9 @@ class AuthGate extends StatelessWidget {
       return const AdminDashboardScreen();
     }
 
-    // If the account does not have a saved role,
-    // allow the user to choose one.
-    return const ChooseRoleScreen();
+    // No valid role was found for this account, send the user back to
+    // the login screen to sign in again.
+    return const LoginScreen();
   }
 
   @override
