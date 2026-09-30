@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/current_user_name.dart';
 import '../theme/app_theme.dart';
 import 'find_volunteer_screen.dart';
 import 'journey_tab.dart';
@@ -7,8 +8,7 @@ import '../shared/messages_tab.dart';
 import 'patient_profile_tab.dart';
 
 class PatientHomeTab extends StatelessWidget {
-  final String patientName;
-  const PatientHomeTab({super.key, this.patientName = 'Rana'});
+  const PatientHomeTab({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,8 +17,8 @@ class PatientHomeTab extends StatelessWidget {
         automaticallyImplyLeading: false,
         title: Row(
           children: [
-            Text('Hello $patientName',
-                style: const TextStyle(
+            const CurrentUserName(prefix: 'Hello ',
+                style: TextStyle(
                     color: AppColors.textDark,
                     fontWeight: FontWeight.w700,
                     fontSize: 18)),

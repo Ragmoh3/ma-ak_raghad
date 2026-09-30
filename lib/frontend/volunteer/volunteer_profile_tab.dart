@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/current_user_name.dart';
 import '../../backend/services/supabase_service.dart';
 import '../theme/app_theme.dart';
 import '../shared/edit_profile_screen.dart';
@@ -38,6 +39,13 @@ class VolunteerProfileTab extends StatelessWidget {
             child: Icon(Icons.person, size: 36, color: AppColors.primaryNavy),
           ),
           const SizedBox(height: 10),
+          const Center(
+            child: CurrentUserName(
+              style: TextStyle(color: AppColors.textDark,
+                  fontSize: 18, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(height: 6),
           Center(
             child: Text(email,
                 style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),

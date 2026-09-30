@@ -1,4 +1,6 @@
 import 'dart:typed_data';
+import '../validation/password_policy.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -6,6 +8,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// Call [SupabaseService.init] once in main() before runApp().
 class SupabaseService {
   SupabaseService._();
+
+  static final profileRevision = ValueNotifier<int>(0);
 
   static SupabaseClient get client => Supabase.instance.client;
 
@@ -40,11 +44,41 @@ class SupabaseService {
     );
   }
 
-  static Future<void> sendPasswordReset(String email) {
-    return client.auth.resetPasswordForEmail(email);
+  static String? _recoveryUserId;
+
+  static Future<void> sendPasswordReset(String email) async {
+    _recoveryUserId = null;
+    await client.auth.resetPasswordForEmail(email.trim());
+  }
+
+  static Future<void> verifyPasswordResetOtp(String email, String token) async {
+    _recoveryUserId = null;
+    final response = await client.auth.verifyOTP(
+      email: email.trim(), token: token.trim(), type: OtpType.recovery,
+    );
+    if (response.session == null || response.user == null) {
+      throw StateError('Verification failed. Request a new code.');
+    }
+    _recoveryUserId = response.user!.id;
+  }
+
+  static Future<void> setRecoveredPassword(String password) async {
+    final error = validateNewPassword(password);
+    if (error != null) throw ArgumentError(error);
+    if (_recoveryUserId == null || currentUser?.id != _recoveryUserId) {
+      throw StateError('Verify your email code first.');
+    }
+    await client.auth.updateUser(UserAttributes(password: password));
+    _recoveryUserId = null;
+  }
+
+  static Future<void> endPasswordRecovery() async {
+    _recoveryUserId = null;
+    await client.auth.signOut(scope: SignOutScope.local);
   }
 
   static Future<void> signOut() {
+    _recoveryUserId = null;
     return client.auth.signOut();
   }
 
@@ -53,11 +87,28 @@ class SupabaseService {
 
     await client.from('profiles').upsert({
       'id': userId,
-      'full_name': fullName,
+      'full_name': fullName.trim(),
     });
+    profileRevision.value++;
   }
 
   static User? get currentUser => client.auth.currentUser;
+
+  /// Read the signed-in account, never a demo user's name.
+  static Future<String> getMyFullName() async {
+    final user = currentUser;
+    if (user == null) return '';
+    final metadataName = (user.userMetadata?['full_name'] as String? ?? '').trim();
+    try {
+      final row = await client.from('profiles').select('full_name')
+          .eq('id', user.id).maybeSingle();
+      final name = (row?['full_name'] as String? ?? '').trim();
+      return name.isNotEmpty ? name : metadataName;
+    } catch (_) {
+      return metadataName;
+    }
+  }
+
 
 // ---------------- User profiles and roles ----------------
   static Future<void> setRole(
