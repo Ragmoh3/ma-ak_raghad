@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/current_user_name.dart';
 import '../theme/app_theme.dart';
 import '../shared/messages_tab.dart';
 import 'available_requests_screen.dart';
@@ -6,8 +7,7 @@ import 'schedule_tab.dart';
 import 'volunteer_profile_tab.dart';
 
 class VolunteerHomeTab extends StatelessWidget {
-  final String volunteerName;
-  const VolunteerHomeTab({super.key, this.volunteerName = 'Sarah'});
+  const VolunteerHomeTab({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,8 +16,8 @@ class VolunteerHomeTab extends StatelessWidget {
         automaticallyImplyLeading: false,
         title: Row(
           children: [
-            Text('Hello $volunteerName',
-                style: const TextStyle(
+            const CurrentUserName(prefix: 'Hello ',
+                style: TextStyle(
                     color: AppColors.textDark,
                     fontWeight: FontWeight.w700,
                     fontSize: 18)),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../backend/services/supabase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/maak_logo.dart';
-import 'check_email_screen.dart';
+import 'verify_reset_otp_screen.dart';
 import 'login_screen.dart';
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -22,7 +22,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     super.dispose();
   }
 
-  Future<void> _sendResetLink() async {
+  Future<void> _sendResetCode() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
@@ -30,13 +30,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       if (!mounted) return;
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => CheckEmailScreen(email: _emailController.text.trim()),
+          builder: (_) => VerifyResetOtpScreen(email: _emailController.text.trim()),
         ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تعذر إرسال الرابط: ${e.toString()}')),
+        SnackBar(content: Text('تعذر إرسال الرمز: ${e.toString()}')),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -81,7 +81,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               ),
                               const SizedBox(height: 8),
                               const Text(
-                                "Enter your email address and we'll send you a link to reset your password.",
+                                "Enter your email address and we'll send you a verification code.",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(color: AppColors.textMuted),
                               ),
@@ -99,7 +99,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               ),
                               const SizedBox(height: 20),
                               ElevatedButton(
-                                onPressed: _loading ? null : _sendResetLink,
+                                onPressed: _loading ? null : _sendResetCode,
                                 child: _loading
                                     ? const SizedBox(
                                         height: 20,
@@ -107,7 +107,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                         child: CircularProgressIndicator(
                                             color: Colors.white, strokeWidth: 2),
                                       )
-                                    : const Text('Send reset link'),
+                                    : const Text('Send verification code'),
                               ),
                               const SizedBox(height: 12),
                               Center(
